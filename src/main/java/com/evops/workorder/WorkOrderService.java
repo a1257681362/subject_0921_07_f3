@@ -48,7 +48,20 @@ public class WorkOrderService {
      */
     @Transactional(rollbackFor = Exception.class)
     public WorkOrder create(WorkOrderCreateRequest req) {
-        requestRecordService.register(req.getRequestNo(), BizType.WORK_ORDER_CREATE, req.getOrderNo());
+        return doCreate(req, BizType.WORK_ORDER_CREATE);
+    }
+
+    /**
+     * CSV 导入建档：与接口建档同一事务口径、同一校验规则，
+     * 业务类型记 WORK_ORDER_IMPORT，便于台账区分来源。行级请求号由导入方生成。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public WorkOrder createImported(WorkOrderCreateRequest req) {
+        return doCreate(req, BizType.WORK_ORDER_IMPORT);
+    }
+
+    private WorkOrder doCreate(WorkOrderCreateRequest req, String bizType) {
+        requestRecordService.register(req.getRequestNo(), bizType, req.getOrderNo());
 
         Machine machine = machineMapper.selectById(req.getMachineId());
         if (machine == null) {

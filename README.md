@@ -47,6 +47,8 @@
 | POST | `/api/work-orders/{id}/manual-area` | 人工上报面积（仅参考） |
 | POST | `/api/work-orders/{id}/reverse` | 红冲，另开反向单 |
 
+作业单文件交换（CSV）：`GET /api/work-orders/export` 导出（可按 status 过滤）、`GET /api/work-orders/import-template` 下载导入模板、`POST /api/work-orders/import` 批量导入（multipart，逐行独立事务，失败行带行号；单号已存在自动跳过，重复导入幂等）。格式与转义规则见 [docs/work-order-csv-exchange.md](docs/work-order-csv-exchange.md)，值班处置见 [docs/work-order-csv-runbook.md](docs/work-order-csv-runbook.md)。
+
 表结构（4 张业务表）：`t_machine`、`t_work_order`、`t_work_order_status_log`、`t_request_record`。
 
 ## F2 卫星轨迹账每日勾稽
