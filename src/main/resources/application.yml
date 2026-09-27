@@ -1,0 +1,54 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: evops-base
+  profiles:
+    active: dev
+  jackson:
+    time-zone: Asia/Shanghai
+    serialization:
+      write-dates-as-timestamps: false
+  datasource:
+    url: jdbc:h2:file:./data/evops;AUTO_SERVER=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: false
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+  quartz:
+    job-store-type: memory
+    # 内存 JobStore 为单实例口径；同实例内靠 concurrent=false 防重入，
+    # 跨实例/跨触发方式靠 t_recon_batch 每日唯一约束兜底。多实例部署时改 JDBC JobStore。
+    properties:
+      org.quartz.scheduler.instanceName: EvopsScheduler
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.evops
+  configuration:
+    map-underscore-to-camel-case: true
+
+# 卫星轨迹账每日勾稽配置
+reconcile:
+  # 定时调度开关（测试环境关闭，手工/用例直接调服务触发）
+  scheduling-enabled: true
+  # 每天凌晨 02:10 跑前一日的勾稽（避开整点高峰）
+  cron: "0 10 2 * * ?"
+  # 匹配容差（亩）：|双方面积差| <= tolerance 视为一致；可通过配置/接口调整
+  tolerance: 0.05
+  # 引擎模式：PARALLEL 新旧并跑比对（默认，至少并跑两天）；NEW 仅新引擎（切换后）；LEGACY 仅旧引擎（回退用）
+  engine-mode: PARALLEL
+  # 切换前置条件：最近 N 个批次双引擎结果一致
+  cutover-batch-size: 2
+
+logging:
+  level:
+    com.evops: INFO
