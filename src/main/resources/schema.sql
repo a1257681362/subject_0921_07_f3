@@ -224,3 +224,7 @@ VALUES ('f1-workorder', '农机底账与作业单主链路（建档/流转/轨�
 MERGE INTO t_evops_schema_version (version_no, description)
 KEY (version_no)
 VALUES ('f2-recon', '卫星轨迹账每日勾稽（新旧引擎并跑/逐笔差异清单/容差可配/核销清零）');
+
+MERGE INTO t_evops_schema_version (version_no, description)
+KEY (version_no)
+VALUES ('f3-workorder-exchange', '作业单文件交换标准化（CSV 导出/模板下载/批量导入/幂等）');

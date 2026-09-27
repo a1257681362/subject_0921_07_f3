@@ -1,6 +1,6 @@
 # EVOPS 基础工作区
 
-合作社作业管理系统骨架（F1：农机底账 + 作业单主链路；F2：卫星轨迹账每日勾稽/核销）。
+合作社作业管理系统骨架（F1：农机底账 + 作业单主链路；F2：卫星轨迹账每日勾稽/核销；F3：作业单文件交换标准化）。
 
 技术栈：Java 8、Spring Boot 2.7、MyBatis-Plus、H2 本地文件数据库、Shiro、Thymeleaf、Quartz。
 
@@ -46,6 +46,19 @@
 | POST | `/api/work-orders/{id}/track-area` | 登记轨迹核算面积（权威） |
 | POST | `/api/work-orders/{id}/manual-area` | 人工上报面积（仅参考） |
 | POST | `/api/work-orders/{id}/reverse` | 红冲，另开反向单 |
+
+文件交换 `/api/work-orders`（F3，格式与转义规则见 [docs/work-order-csv-exchange.md](docs/work-order-csv-exchange.md)，值班处置见 [docs/work-order-exchange-runbook.md](docs/work-order-exchange-runbook.md)）
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/api/work-orders/export?orderNo=&status=&machineCode=` | CSV 导出（与模板同列，可直接再导入；单次上限 10000 行） |
+| GET | `/api/work-orders/import-template` | 导入模板下载（表头 + 示例行，示例行导入前删除） |
+| POST | `/api/work-orders/import` | 批量导入（multipart：`file` + `requestNo`），逐行返回 CREATED/SKIPPED/FAILED |
+
+- **列**：`orderNo, machineCode, operationType, plotName, remark`（农机用业务编码，不用内部 ID）。
+- **转义**：RFC 4180——字段含逗号/双引号/换行时双引号包裹，内部双引号双写；UTF-8，导出带 BOM、导入自动剥离；CRLF 行尾。
+- **幂等**：批次凭 `requestNo` 登记台账防重放；行级按 `orderNo` 判重——内容一致跳过（SKIPPED），内容冲突报 FAILED，重复导入不产生重复单。
+- **失败定位**：逐行独立事务，失败行返回物理行号（表头为第 1 行）+ 规范化行内容 + 原因，成功行不受影响。
 
 表结构（4 张业务表）：`t_machine`、`t_work_order`、`t_work_order_status_log`、`t_request_record`。
 
